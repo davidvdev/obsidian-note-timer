@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.1",
+	"id": "obsidian-note-timer",
+	"name": "Note Timer",
+	"version": "0.0.1",
 	"minAppVersion": "0.9.12",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md/about",
+	"description": "Add a timer to your notes! Great for practicing speeches, interview answers, or any time sensitive activity.",
+	"author": "davidvdev",
+	"authorUrl": "https://www.davidvdev.com",
 	"isDesktopOnly": false
 }
