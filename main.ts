@@ -10,47 +10,61 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
+	timerInterval : null | number = null
+
+	runTimer(h:number, m:number, s:number) {
+		s++
+		if (s === 60){
+			s = 0
+			m++
+		}
+		if (m === 60){
+			m = 0
+			h++
+		}
+		console.log(`${h}:${m}:${s}`)
+		return {h,m,s}
+	}
 
 	async onload() {
 		console.log('loading plugin');
 
-		// this.registerMarkdownPostProcessor((el, ctx) => {
-		// 	const codeblocks = el.querySelectorAll("code")
-
-		// 	for (let i = 0; i < codeblocks.length; i++){
-		// 		const codeblock = codeblocks.item(i)
-		// 		const text = codeblock.innerText.trim()
-		// 		const isTimer = text[0] === "timer"
-
-		// 		console.log('codeblock:', codeblock)
-		// 		console.log('text:', text)
-		// 		console.log('isTimer:', isTimer)
-
-		// 		if(isTimer) console.log('found timer')
-		// 	}
-		// })
-
 		this.registerMarkdownCodeBlockProcessor("timer", (src,el,ctx) => {
-			console.log('timer found')
-			console.log('src: ', src)
-			console.log('el: ', el)
-			console.log('ctx: ', ctx)
 
-			const timerStart = (evt:EventTarget) => {
-				console.log('evt', evt)
+			const time = {h:0,m:0,s:0}
+			let isRunning = false
+
+			const timeDisplay = el.createEl("span", { text: `${time.h}:${time.m}:${time.s}`})
+
+			const timerControl = (cmd:Boolean) => {
+				if(cmd && !isRunning){
+					isRunning = true
+					window.clearInterval(this.timerInterval)
+					this.timerInterval = null
+					this.timerInterval = window.setInterval(() => {
+						const runningTime = this.runTimer(time.h, time.m, time.s)
+						time.h = runningTime.h
+						time.m = runningTime.m
+						time.s = runningTime.s
+						timeDisplay.setText(`${time.h}:${time.m}:${time.s}`)
+					}, 1000)
+				} else if (!cmd && isRunning){
+					isRunning = false
+					clearInterval(this.timerInterval)
+				}
+				this.registerInterval(this.timerInterval)
 			}
-
-			const time = el.createEl("span", { text: "00:00" })
+			
 			const start = el.createEl("button", { text: "start", cls: "timer-start" })
-			const stop = el.createEl("button" ,{ text: "stop", cls: "timer-stop"})
 			const pause = el.createEl("button" ,{ text: "pause", cls: "timer-pause"})
 			const reset = el.createEl("button" ,{ text: "reset", cls: "timer-reset"})
 
-			time.setText("00:00")
-			start.onclick = (evt) => timerStart(evt.target)
-
-
-			
+			start.onclick = () => timerControl(true)
+			pause.onclick = () => {
+				timerControl(false)
+				timeDisplay.setText(`${time.h}:${time.m}:${time.s}`)
+			}
+			reset.onclick = () => timeDisplay.setText(`${time.h = 0}:${time.m = 0}:${time.s = 0}`)
 		})
 
 
