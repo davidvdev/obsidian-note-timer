@@ -22,7 +22,6 @@ export default class MyPlugin extends Plugin {
 			m = 0
 			h++
 		}
-		console.log(`${h}:${m}:${s}`)
 		return {h,m,s}
 	}
 
@@ -30,6 +29,8 @@ export default class MyPlugin extends Plugin {
 		console.log('loading plugin');
 
 		this.registerMarkdownCodeBlockProcessor("timer", (src,el,ctx) => {
+
+			console.log('src', src.split(" "))
 
 			const time = {h:0,m:0,s:0}
 			let isRunning = false
@@ -58,27 +59,12 @@ export default class MyPlugin extends Plugin {
 			const start = el.createEl("button", { text: "start", cls: "timer-start" })
 			const pause = el.createEl("button" ,{ text: "pause", cls: "timer-pause"})
 			const reset = el.createEl("button" ,{ text: "reset", cls: "timer-reset"})
+			const log = el.createEl("button" ,{ text: "log", cls: "timer-log"})
 
 			start.onclick = () => timerControl(true)
-			pause.onclick = () => {
-				timerControl(false)
-				timeDisplay.setText(`${time.h}:${time.m}:${time.s}`)
-			}
+			pause.onclick = () => timerControl(false)
 			reset.onclick = () => timeDisplay.setText(`${time.h = 0}:${time.m = 0}:${time.s = 0}`)
 		})
-
-
-
-
-
-
-
-
-		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
-		// console.log('view: ', view)
-
-		const files = this.app.vault.getMarkdownFiles()
-		// console.log('files: ', files)
 
 		await this.loadSettings();
 
