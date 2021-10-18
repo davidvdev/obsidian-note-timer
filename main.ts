@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 interface MyPluginSettings {
 	mySetting: string;
@@ -14,43 +14,65 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		console.log('loading plugin');
 
-		await this.loadSettings();
+		// this.registerMarkdownPostProcessor((el, ctx) => {
+		// 	const codeblocks = el.querySelectorAll("code")
 
-		this.addRibbonIcon('dice', 'Sample Plugin', () => {
-			new Notice('This is a notice!');
-		});
+		// 	for (let i = 0; i < codeblocks.length; i++){
+		// 		const codeblock = codeblocks.item(i)
+		// 		const text = codeblock.innerText.trim()
+		// 		const isTimer = text[0] === "timer"
 
-		this.addStatusBarItem().setText('Status Bar Text');
+		// 		console.log('codeblock:', codeblock)
+		// 		console.log('text:', text)
+		// 		console.log('isTimer:', isTimer)
 
-		this.addCommand({
-			id: 'open-sample-modal',
-			name: 'Open Sample Modal',
-			// callback: () => {
-			// 	console.log('Simple Callback');
-			// },
-			checkCallback: (checking: boolean) => {
-				let leaf = this.app.workspace.activeLeaf;
-				if (leaf) {
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-					return true;
-				}
-				return false;
+		// 		if(isTimer) console.log('found timer')
+		// 	}
+		// })
+
+		this.registerMarkdownCodeBlockProcessor("timer", (src,el,ctx) => {
+			console.log('timer found')
+			console.log('src: ', src)
+			console.log('el: ', el)
+			console.log('ctx: ', ctx)
+
+			const timerStart = (evt:EventTarget) => {
+				console.log('evt', evt)
 			}
-		});
+
+			const time = el.createEl("span", { text: "00:00" })
+			const start = el.createEl("button", { text: "start", cls: "timer-start" })
+			const stop = el.createEl("button" ,{ text: "stop", cls: "timer-stop"})
+			const pause = el.createEl("button" ,{ text: "pause", cls: "timer-pause"})
+			const reset = el.createEl("button" ,{ text: "reset", cls: "timer-reset"})
+
+			time.setText("00:00")
+			start.onclick = (evt) => timerStart(evt.target)
+
+
+			
+		})
+
+
+
+
+
+
+
+
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+		// console.log('view: ', view)
+
+		const files = this.app.vault.getMarkdownFiles()
+		// console.log('files: ', files)
+
+		await this.loadSettings();
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
 		this.registerCodeMirror((cm: CodeMirror.Editor) => {
-			console.log('codemirror', cm);
+			// console.log('codemirror', cm);
 		});
-
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
 	onunload() {
@@ -63,22 +85,6 @@ export default class MyPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		let {contentEl} = this;
-		contentEl.empty();
 	}
 }
 

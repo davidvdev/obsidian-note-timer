@@ -1,4 +1,15 @@
-/* Sets all the text color to red! */
-body {
-    color: red;
+.block-language-timer {
+    background-color: rgba(0,0,0,0.75);
+    height: 2em;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 3em;
+    margin: 0;
+    color: white;
+}
+
+.block-language-timer button {
+    margin: 0;
+    padding: 1em;
 }
