@@ -33,12 +33,10 @@ export default class MyPlugin extends Plugin {
 			console.log('src', src.split(" "))
 
 			const time = {h:0,m:0,s:0}
+			const stringTime = () => `${time.h < 10 ? `0${time.h}` : `${time.h}`}:${time.m < 10 ? `0${time.m}` : `${time.m}`}:${time.s < 10 ? `0${time.s}`: `${time.s}`}`
 			let isRunning = false
 
-			const timeDisplay = el.createEl("span", { text: 
-				`${time.h < 10 ? `0${time.h}` : `${time.h}`}
-							:${time.m < 10 ? `0${time.m}` : `${time.m}`}
-							:${time.s < 10 ? `0${time.s}`: `${time.s}`}`})
+			const timeDisplay = el.createEl("span", { text: stringTime()})
 
 			const timerControl = (cmd:Boolean) => {
 				if(cmd && !isRunning){
@@ -50,9 +48,7 @@ export default class MyPlugin extends Plugin {
 						time.h = runningTime.h
 						time.m = runningTime.m
 						time.s = runningTime.s
-						timeDisplay.setText(
-							`${time.h < 10 ? `0${time.h}` : `${time.h}`}:${time.m < 10 ? `0${time.m}` : `${time.m}`}:${time.s < 10 ? `0${time.s}` : `${time.s}`}`
-							)
+						timeDisplay.setText(stringTime())
 					}, 1000)
 				} else if (!cmd && isRunning){
 					isRunning = false
@@ -68,7 +64,12 @@ export default class MyPlugin extends Plugin {
 
 			start.onclick = () => timerControl(true)
 			pause.onclick = () => timerControl(false)
-			reset.onclick = () => timeDisplay.setText(`${time.h = 0}:${time.m = 0}:${time.s = 0}`)
+			reset.onclick = () => {
+				time.h = 0
+				time.m = 0
+				time.s = 0
+				timeDisplay.setText(stringTime())
+			}
 		})
 
 		await this.loadSettings();
