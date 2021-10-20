@@ -1,4 +1,4 @@
-import { App, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Component, Editor, htmlToMarkdown, MarkdownRenderer, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 interface MyPluginSettings {
 	mySetting: string;
@@ -25,12 +25,18 @@ export default class MyPlugin extends Plugin {
 		return {h,m,s}
 	}
 
+	logTime(time:string, timer:HTMLElement, filePath:string, component:Component) {
+		const logEntry= time
+		MarkdownRenderer.renderMarkdown(logEntry, timer, filePath, component )
+	}
+
 	async onload() {
 		console.log('loading plugin');
 
 		this.registerMarkdownCodeBlockProcessor("timer", (src,el,ctx) => {
 
 			console.log('src', src.split(" "))
+			console.log('ctx: ', ctx)
 
 			const time = {h:0,m:0,s:0}
 			const stringTime = () => `${time.h < 10 ? `0${time.h}` : `${time.h}`}:${time.m < 10 ? `0${time.m}` : `${time.m}`}:${time.s < 10 ? `0${time.s}`: `${time.s}`}`
@@ -56,7 +62,7 @@ export default class MyPlugin extends Plugin {
 				}
 				this.registerInterval(this.timerInterval)
 			}
-			
+
 			const start = el.createEl("button", { text: "start", cls: "timer-start" })
 			const pause = el.createEl("button" ,{ text: "pause", cls: "timer-pause"})
 			const reset = el.createEl("button" ,{ text: "reset", cls: "timer-reset"})
@@ -70,7 +76,9 @@ export default class MyPlugin extends Plugin {
 				time.s = 0
 				timeDisplay.setText(stringTime())
 			}
+			// log.onclick = () => this.logTime(stringTime(), el, ctx.sourcePath, this)
 		})
+		
 
 		await this.loadSettings();
 
