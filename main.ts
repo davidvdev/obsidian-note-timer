@@ -35,7 +35,10 @@ export default class MyPlugin extends Plugin {
 			const time = {h:0,m:0,s:0}
 			let isRunning = false
 
-			const timeDisplay = el.createEl("span", { text: `${time.h}:${time.m}:${time.s}`})
+			const timeDisplay = el.createEl("span", { text: 
+				`${time.h < 10 ? `0${time.h}` : `${time.h}`}
+							:${time.m < 10 ? `0${time.m}` : `${time.m}`}
+							:${time.s < 10 ? `0${time.s}`: `${time.s}`}`})
 
 			const timerControl = (cmd:Boolean) => {
 				if(cmd && !isRunning){
@@ -47,7 +50,9 @@ export default class MyPlugin extends Plugin {
 						time.h = runningTime.h
 						time.m = runningTime.m
 						time.s = runningTime.s
-						timeDisplay.setText(`${time.h}:${time.m}:${time.s}`)
+						timeDisplay.setText(
+							`${time.h < 10 ? `0${time.h}` : `${time.h}`}:${time.m < 10 ? `0${time.m}` : `${time.m}`}:${time.s < 10 ? `0${time.s}` : `${time.s}`}`
+							)
 					}, 1000)
 				} else if (!cmd && isRunning){
 					isRunning = false
