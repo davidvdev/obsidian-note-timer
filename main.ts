@@ -1,15 +1,15 @@
 import { App, Component, Editor, htmlToMarkdown, MarkdownRenderer, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
-interface MyPluginSettings {
-	mySetting: string;
+interface NoteTimerSettings {
+	autoLog: boolean;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+const DEFAULT_SETTINGS: NoteTimerSettings = {
+	autoLog: false
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class NoteTimer extends Plugin {
+	settings: NoteTimerSettings;
 	timerInterval : null | number = null
 
 	runTimer(h:number, m:number, s:number) {
@@ -31,17 +31,12 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async onload() {
-		console.log('loading plugin');
 
 		this.registerMarkdownCodeBlockProcessor("timer", (src,el,ctx) => {
-
-			console.log('src', src.split(" "))
-			console.log('ctx: ', ctx)
 
 			const time = {h:0,m:0,s:0}
 			const stringTime = () => `${time.h < 10 ? `0${time.h}` : `${time.h}`}:${time.m < 10 ? `0${time.m}` : `${time.m}`}:${time.s < 10 ? `0${time.s}`: `${time.s}`}`
 			let isRunning = false
-
 			const timeDisplay = el.createEl("span", { text: stringTime()})
 
 			const timerControl = (cmd:Boolean) => {
@@ -103,9 +98,9 @@ export default class MyPlugin extends Plugin {
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: NoteTimer;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: NoteTimer) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -115,17 +110,16 @@ class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+		containerEl.createEl('h2', {text: 'Settings for Note Timer'});
+		containerEl.createEl('p', { text: 'create a timer in any note by adding `timer` to any codeblock.'})
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+			.setName('Log by default')
+			.setDesc('Automatically creates a markdown table below the timer to maintain a log of timer durations.')
+			.addToggle( toggle => toggle 
+				.setValue(this.plugin.settings.autoLog)
 				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.autoLog = value;
 					await this.plugin.saveSettings();
 				}));
 	}
