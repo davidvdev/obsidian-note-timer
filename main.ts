@@ -1,4 +1,5 @@
-import { App, Component, Editor, htmlToMarkdown, MarkdownRenderer, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { table } from 'console';
+import { App, Component, Editor, htmlToMarkdown, MarkdownRenderChild, MarkdownRenderer, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ToggleComponent } from 'obsidian';
 
 interface NoteTimerSettings {
 	autoLog: boolean;
@@ -25,11 +26,6 @@ export default class NoteTimer extends Plugin {
 		return {h,m,s}
 	}
 
-	logTime(time:string, timer:HTMLElement, filePath:string, component:Component) {
-		const logEntry= time
-		MarkdownRenderer.renderMarkdown(logEntry, timer, filePath, component )
-	}
-
 	async onload() {
 
 		this.registerMarkdownCodeBlockProcessor("timer", (src,el,ctx) => {
@@ -38,7 +34,9 @@ export default class NoteTimer extends Plugin {
 			const stringTime = () => `${time.h < 10 ? `0${time.h}` : `${time.h}`}:${time.m < 10 ? `0${time.m}` : `${time.m}`}:${time.s < 10 ? `0${time.s}`: `${time.s}`}`
 			let isRunning = false
 			const timeDisplay = el.createEl("span", { text: stringTime()})
-
+			const isLog = () => {
+				return this.settings.autoLog === true ? true : src.toLowerCase().contains("log:" && "true")
+			} 
 			const timerControl = (cmd:Boolean) => {
 				if(cmd && !isRunning){
 					isRunning = true
@@ -61,7 +59,7 @@ export default class NoteTimer extends Plugin {
 			const start = el.createEl("button", { text: "start", cls: "timer-start" })
 			const pause = el.createEl("button" ,{ text: "pause", cls: "timer-pause"})
 			const reset = el.createEl("button" ,{ text: "reset", cls: "timer-reset"})
-			const log = el.createEl("button" ,{ text: "log", cls: "timer-log"})
+
 
 			start.onclick = () => timerControl(true)
 			pause.onclick = () => timerControl(false)
@@ -71,13 +69,34 @@ export default class NoteTimer extends Plugin {
 				time.s = 0
 				timeDisplay.setText(stringTime())
 			}
-			// log.onclick = () => this.logTime(stringTime(), el, ctx.sourcePath, this)
+
+			if (isLog()){
+				const log = el.createEl("button" ,{ text: "log", cls: "timer-log"})
+				const area = ctx.getSectionInfo(el).text.toLowerCase()
+				log.onclick = async () => {
+					console.log('is logging activated? ', isLog())
+					const newLinePositions = []
+					const logPosition = area.search("# timer log")
+					const nextOpenLine = (positions:number[], header:number) => {
+						return positions[positions.findIndex(n => n > header)+2]
+					};
+					for(let c = 0; c < area.length; c++){
+						if(area[c].search("\n") >= 0) newLinePositions.push(c)
+					}
+					console.log('next pos: ', nextOpenLine(newLinePositions, logPosition))
+	
+					const actFile = this.app.workspace.getActiveFile();
+					const curString = await this.app.vault.read(actFile);
+
+					this.app.vault.modify(actFile, curString + "| date | 00:00:00 | nice |" + `\n` )
+				}
+			}
 		})
 		
 
 		await this.loadSettings();
 
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new NoteTimerSettingsTab(this.app, this));
 
 		this.registerCodeMirror((cm: CodeMirror.Editor) => {
 			// console.log('codemirror', cm);
@@ -97,7 +116,7 @@ export default class NoteTimer extends Plugin {
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
+class NoteTimerSettingsTab extends PluginSettingTab {
 	plugin: NoteTimer;
 
 	constructor(app: App, plugin: NoteTimer) {
