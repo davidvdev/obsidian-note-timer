@@ -4,21 +4,27 @@ import { App, Component, Editor, htmlToMarkdown, MarkdownRenderChild, MarkdownRe
 interface NoteTimerSettings {
 	autoLog: boolean;
 	dateFormat: string;
-	logDateLinking: string
+	logDateLinking: string;
+	msDisplay: boolean
 }
 
 const DEFAULT_SETTINGS: NoteTimerSettings = {
 	autoLog: false,
 	dateFormat: 'YYYY-MM-DD',
-	logDateLinking: 'none'
+	logDateLinking: 'none',
+	msDisplay: true
 }
 
 export default class NoteTimer extends Plugin {
 	settings: NoteTimerSettings;
 	timerInterval : null | number = null
 
-	runTimer(h:number, m:number, s:number) {
-		s++
+	runTimer(h:number, m:number, s:number, ms:number) {
+		ms++
+		if (ms === 100){
+			ms = 0
+			s++
+		}
 		if (s === 60){
 			s = 0
 			m++
@@ -27,7 +33,7 @@ export default class NoteTimer extends Plugin {
 			m = 0
 			h++
 		}
-		return {h,m,s}
+		return {h,m,s,ms}
 	}
 
 	nextOpenLine(positions:number[], target:number) {
@@ -83,24 +89,45 @@ export default class NoteTimer extends Plugin {
 
 		this.registerMarkdownCodeBlockProcessor("timer", (src,el,ctx) => {
 
-			const time = {h:0,m:0,s:0}
-			const stringTime = () => `${time.h < 10 ? `0${time.h}` : `${time.h}`}:${time.m < 10 ? `0${time.m}` : `${time.m}`}:${time.s < 10 ? `0${time.s}`: `${time.s}`}`
+			// localized settings
+			const isLog = () => this.settings.autoLog === true ? true : src.toLowerCase().contains("log: true" || "log:true")
+			const isMsDisplay = () => this.settings.msDisplay === true ? true : src.toLowerCase().contains("ms: true" || "ms:true")
+
+			const time = {h:0,m:0,s:0, ms:0}
+			const stringTime = () => {
+				if(isMsDisplay()){
+					return(
+						`${time.h < 10 ? `0${time.h}` : `${time.h}`}`
+						+`:${time.m < 10 ? `0${time.m}` : `${time.m}`}`
+						+`:${time.s < 10 ? `0${time.s}`: `${time.s}`}`
+						+`:${time.ms}`
+					)
+				} else {
+					return(
+						`${time.h < 10 ? `0${time.h}` : `${time.h}`}`
+						+`:${time.m < 10 ? `0${time.m}` : `${time.m}`}`
+						+`:${time.s < 10 ? `0${time.s}`: `${time.s}`}`
+					)
+				}
+			}
 			let isRunning = false
 			const timeDisplay = el.createEl("span", { text: stringTime()})
-			const isLog = () => this.settings.autoLog === true ? true : src.toLowerCase().contains("log:" && "true")
+			
 			
 			const timerControl = (cmd:Boolean) => {
 				if(cmd && !isRunning){
+					stringTime()
 					isRunning = true
 					window.clearInterval(this.timerInterval)
 					this.timerInterval = null
 					this.timerInterval = window.setInterval(() => {
-						const runningTime = this.runTimer(time.h, time.m, time.s)
+						const runningTime = this.runTimer(time.h, time.m, time.s, time.ms)
 						time.h = runningTime.h
 						time.m = runningTime.m
 						time.s = runningTime.s
+						time.ms = runningTime.ms
 						timeDisplay.setText(stringTime())
-					}, 1000)
+					}, 10)
 				} else if (!cmd && isRunning){
 					isRunning = false
 					clearInterval(this.timerInterval)
@@ -108,9 +135,10 @@ export default class NoteTimer extends Plugin {
 				this.registerInterval(this.timerInterval)
 			}
 
-			const start = el.createEl("button", { text: "start", cls: "timer-start" })
-			const pause = el.createEl("button" ,{ text: "pause", cls: "timer-pause"})
-			const reset = el.createEl("button" ,{ text: "reset", cls: "timer-reset"})
+			const buttonDiv = el.createDiv({ cls: "timer-button-group"})
+			const start = buttonDiv.createEl("button", { text: "start", cls: "timer-start" })
+			const pause = buttonDiv.createEl("button" ,{ text: "pause", cls: "timer-pause"})
+			const reset = buttonDiv.createEl("button" ,{ text: "reset", cls: "timer-reset"})
 
 
 			start.onclick = () => timerControl(true)
@@ -119,11 +147,12 @@ export default class NoteTimer extends Plugin {
 				time.h = 0
 				time.m = 0
 				time.s = 0
+				time.ms = 0
 				timeDisplay.setText(stringTime())
 			}
 
 			if (isLog()){
-				const log = el.createEl("button" ,{ text: "log", cls: "timer-log"})
+				const log = buttonDiv.createEl("button" ,{ text: "log", cls: "timer-log"})
 				log.onclick = () => {
 					const area = ctx.getSectionInfo(el).text.toLowerCase()
 					let logPosition = area.search("# timer log")
@@ -175,6 +204,15 @@ class NoteTimerSettingsTab extends PluginSettingTab {
 		containerEl.createEl('h2', {text: 'Settings for Note Timer'});
 		containerEl.createEl('p', { text: 'create a timer in any note by adding `timer` to any codeblock.'})
 
+		new Setting(containerEl)
+			.setName('Display Milleseconds')
+			.setDesc('If faster timers induce anxiety, you can turn off the millesecond display')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.msDisplay)
+				.onChange(async (value) => {
+					this.plugin.settings.msDisplay = value
+					await this.plugin.saveSettings()
+				}))
 		new Setting(containerEl)
 			.setName('Log by default')
 			.setDesc('Automatically creates a markdown table below the timer to maintain a log of timer durations.')
