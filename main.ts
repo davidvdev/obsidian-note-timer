@@ -9,7 +9,7 @@ interface NoteTimerSettings {
 
 const DEFAULT_SETTINGS: NoteTimerSettings = {
 	autoLog: false,
-	dateFormat: 'YYYYMMDD',
+	dateFormat: 'YYYY-MM-DD',
 	logDateLinking: 'none'
 }
 
