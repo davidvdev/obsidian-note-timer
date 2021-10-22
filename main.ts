@@ -1,12 +1,16 @@
 import { table } from 'console';
-import { App, Component, Editor, htmlToMarkdown, MarkdownRenderChild, MarkdownRenderer, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ToggleComponent } from 'obsidian';
+import { App, Component, Editor, htmlToMarkdown, MarkdownRenderChild, MarkdownRenderer, MarkdownView, Modal, moment, Notice, Plugin, PluginSettingTab, Setting, ToggleComponent } from 'obsidian';
 
 interface NoteTimerSettings {
 	autoLog: boolean;
+	dateFormat: string;
+	logDateLinking: string
 }
 
 const DEFAULT_SETTINGS: NoteTimerSettings = {
-	autoLog: false
+	autoLog: false,
+	dateFormat: 'YYYYMMDD',
+	logDateLinking: 'none'
 }
 
 export default class NoteTimer extends Plugin {
@@ -75,6 +79,18 @@ export default class NoteTimer extends Plugin {
 				const area = ctx.getSectionInfo(el).text.toLowerCase()
 				log.onclick = async () => {
 					console.log('is logging activated? ', isLog())
+					
+					let customDate = String(moment().format(this.settings.dateFormat))
+					switch (this.settings.logDateLinking) {
+						case 'tag':
+							customDate = `#${customDate}`
+							break;
+						case 'link':
+							customDate = `[[${customDate}]]`
+						default:
+							break;
+					}
+
 					const newLinePositions = []
 					const logPosition = area.search("# timer log")
 					const nextOpenLine = (positions:number[], header:number) => {
@@ -87,8 +103,14 @@ export default class NoteTimer extends Plugin {
 	
 					const actFile = this.app.workspace.getActiveFile();
 					const curString = await this.app.vault.read(actFile);
+					const curStringPart1 = curString.slice(0, nextOpenLine(newLinePositions, logPosition) )
+					const curStringPart2 = curString.slice(nextOpenLine(newLinePositions, logPosition) , curString.length)
 
-					this.app.vault.modify(actFile, curString + "| date | 00:00:00 | nice |" + `\n` )
+					console.log('part1: ', curStringPart1)
+					console.log('customDate: ', customDate)
+					console.log('part2: ', curStringPart2)
+
+					this.app.vault.modify(actFile, curStringPart1 +  `\n| ${customDate} | ${timeDisplay.textContent} |  |` + curStringPart2)
 				}
 			}
 		})
@@ -141,5 +163,28 @@ class NoteTimerSettingsTab extends PluginSettingTab {
 					this.plugin.settings.autoLog = value;
 					await this.plugin.saveSettings();
 				}));
+		new Setting(containerEl)
+			.setName('Log Date Format')
+			.setDesc('select a date format')
+			.addText(text => text
+				.setPlaceholder(String(DEFAULT_SETTINGS.dateFormat))
+				.setValue(this.plugin.settings.dateFormat)
+				.onChange(async (value) => {
+					this.plugin.settings.dateFormat = value
+					await this.plugin.saveSettings()
+				}))
+		new Setting(containerEl)
+			.setName('Log Date Linking')
+			.setDesc('automatically insert wikilinks, tags, or nothing to dates')
+			.addDropdown( dropdown => dropdown
+				.addOption('none','none')
+				.addOption('tag','#tag')
+				.addOption('link','[[link]]')
+				.setValue(this.plugin.settings.logDateLinking)
+				.onChange( async (value) => {
+					this.plugin.settings.logDateLinking = value
+					await this.plugin.saveSettings()
+				})
+				)
 	}
 }
