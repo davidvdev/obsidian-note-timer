@@ -30,13 +30,17 @@ export default class NoteTimer extends Plugin {
 		return {h,m,s}
 	}
 
-	createNewTimerLog() {
-		
+	nextOpenLine(positions:number[], target:number) {
+		// target: identifies the table location
+		// +2: next 2 line breaks are md table column titles, and format lines
+		return positions[positions.findIndex(n => n > target)+2]
 	}
 
-	async addToTimerLog(area:string, duration:string) {
+
+	async addToTimerLog(duration:string, logPosition:number) {
+		const actFile = this.app.workspace.getActiveFile();
+		const curString = await this.app.vault.read(actFile);
 		const newLinePositions = []
-		const logPosition = area.search("# timer log")
 		let customDate = String(moment().format(this.settings.dateFormat))
 
 		switch (this.settings.logDateLinking) {
@@ -49,24 +53,30 @@ export default class NoteTimer extends Plugin {
 				break;
 		}
 
-		const nextOpenLine = (positions:number[], header:number) => {
-			// header: identifies the table location
-			// +2: next 2 line breaks are md table column titles, and format lines
-			return positions[positions.findIndex(n => n > header)+2]
-		};
-
-		for(let c = 0; c < area.length; c++){
+		for(let c = 0; c < curString.length; c++){
 			// creates an array of all new line positions
-			if(area[c].search("\n") >= 0) newLinePositions.push(c)
+			if(curString[c].search("\n") >= 0) newLinePositions.push(c)
 		}
 
-		const actFile = this.app.workspace.getActiveFile();
-		const curString = await this.app.vault.read(actFile);
-		const curStringPart1 = curString.slice(0, nextOpenLine(newLinePositions, logPosition) )
-		const curStringPart2 = curString.slice(nextOpenLine(newLinePositions, logPosition) , curString.length)
+		const curStringPart1 = curString.slice(0, this.nextOpenLine(newLinePositions, logPosition) )
+		const curStringPart2 = curString.slice(this.nextOpenLine(newLinePositions, logPosition) , curString.length)
 		const logEntry = `\n| ${customDate} | ${duration} |  |`
 
 		this.app.vault.modify(actFile, curStringPart1 +  logEntry + curStringPart2)
+	}
+
+	async createNewTimerLog() {
+		console.log('Creating new timer log...')
+		
+		const actFile = this.app.workspace.getActiveFile();
+		const curString = await this.app.vault.read(actFile);
+		const timerBlockStart = curString.toLowerCase().search("```timer")
+		const timerBlockEnd = curString.slice(timerBlockStart, curString.length).indexOf("```", 3) + 3
+		const curStringPart1 = curString.slice(0, timerBlockStart + timerBlockEnd)
+		const curStringPart2 = curString.slice(timerBlockStart + timerBlockEnd, curString.length)
+		const tableStr = `\n###### Timer Log\n| date | duration | comments|\n| ---- | -------- | ------- |\n`
+
+		this.app.vault.modify(actFile, curStringPart1 +  tableStr + curStringPart2)
 	}
 
 	async onload() {
@@ -77,9 +87,8 @@ export default class NoteTimer extends Plugin {
 			const stringTime = () => `${time.h < 10 ? `0${time.h}` : `${time.h}`}:${time.m < 10 ? `0${time.m}` : `${time.m}`}:${time.s < 10 ? `0${time.s}`: `${time.s}`}`
 			let isRunning = false
 			const timeDisplay = el.createEl("span", { text: stringTime()})
-			const isLog = () => {
-				return this.settings.autoLog === true ? true : src.toLowerCase().contains("log:" && "true")
-			} 
+			const isLog = () => this.settings.autoLog === true ? true : src.toLowerCase().contains("log:" && "true")
+			
 			const timerControl = (cmd:Boolean) => {
 				if(cmd && !isRunning){
 					isRunning = true
@@ -115,8 +124,15 @@ export default class NoteTimer extends Plugin {
 
 			if (isLog()){
 				const log = el.createEl("button" ,{ text: "log", cls: "timer-log"})
-				const area = ctx.getSectionInfo(el).text.toLowerCase()
-				log.onclick = () => this.addToTimerLog(area, timeDisplay.textContent)
+				log.onclick = () => {
+					const area = ctx.getSectionInfo(el).text.toLowerCase()
+					let logPosition = area.search("# timer log")
+					if(logPosition > 0){
+						this.addToTimerLog(timeDisplay.textContent, logPosition)
+					} else {
+						this.createNewTimerLog()
+					}
+				}
 			}
 		})
 		
