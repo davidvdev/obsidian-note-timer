@@ -30,6 +30,45 @@ export default class NoteTimer extends Plugin {
 		return {h,m,s}
 	}
 
+	createNewTimerLog() {
+		
+	}
+
+	async addToTimerLog(area:string, duration:string) {
+		const newLinePositions = []
+		const logPosition = area.search("# timer log")
+		let customDate = String(moment().format(this.settings.dateFormat))
+
+		switch (this.settings.logDateLinking) {
+			case 'tag':
+				customDate = `#${customDate}`
+				break;
+			case 'link':
+				customDate = `[[${customDate}]]`
+			default:
+				break;
+		}
+
+		const nextOpenLine = (positions:number[], header:number) => {
+			// header: identifies the table location
+			// +2: next 2 line breaks are md table column titles, and format lines
+			return positions[positions.findIndex(n => n > header)+2]
+		};
+
+		for(let c = 0; c < area.length; c++){
+			// creates an array of all new line positions
+			if(area[c].search("\n") >= 0) newLinePositions.push(c)
+		}
+
+		const actFile = this.app.workspace.getActiveFile();
+		const curString = await this.app.vault.read(actFile);
+		const curStringPart1 = curString.slice(0, nextOpenLine(newLinePositions, logPosition) )
+		const curStringPart2 = curString.slice(nextOpenLine(newLinePositions, logPosition) , curString.length)
+		const logEntry = `\n| ${customDate} | ${duration} |  |`
+
+		this.app.vault.modify(actFile, curStringPart1 +  logEntry + curStringPart2)
+	}
+
 	async onload() {
 
 		this.registerMarkdownCodeBlockProcessor("timer", (src,el,ctx) => {
@@ -77,41 +116,7 @@ export default class NoteTimer extends Plugin {
 			if (isLog()){
 				const log = el.createEl("button" ,{ text: "log", cls: "timer-log"})
 				const area = ctx.getSectionInfo(el).text.toLowerCase()
-				log.onclick = async () => {
-					console.log('is logging activated? ', isLog())
-					
-					let customDate = String(moment().format(this.settings.dateFormat))
-					switch (this.settings.logDateLinking) {
-						case 'tag':
-							customDate = `#${customDate}`
-							break;
-						case 'link':
-							customDate = `[[${customDate}]]`
-						default:
-							break;
-					}
-
-					const newLinePositions = []
-					const logPosition = area.search("# timer log")
-					const nextOpenLine = (positions:number[], header:number) => {
-						return positions[positions.findIndex(n => n > header)+2]
-					};
-					for(let c = 0; c < area.length; c++){
-						if(area[c].search("\n") >= 0) newLinePositions.push(c)
-					}
-					console.log('next pos: ', nextOpenLine(newLinePositions, logPosition))
-	
-					const actFile = this.app.workspace.getActiveFile();
-					const curString = await this.app.vault.read(actFile);
-					const curStringPart1 = curString.slice(0, nextOpenLine(newLinePositions, logPosition) )
-					const curStringPart2 = curString.slice(nextOpenLine(newLinePositions, logPosition) , curString.length)
-
-					console.log('part1: ', curStringPart1)
-					console.log('customDate: ', customDate)
-					console.log('part2: ', curStringPart2)
-
-					this.app.vault.modify(actFile, curStringPart1 +  `\n| ${customDate} | ${timeDisplay.textContent} |  |` + curStringPart2)
-				}
+				log.onclick = () => this.addToTimerLog(area, timeDisplay.textContent)
 			}
 		})
 		
