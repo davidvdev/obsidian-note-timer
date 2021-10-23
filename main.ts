@@ -72,8 +72,6 @@ export default class NoteTimer extends Plugin {
 	}
 
 	async createNewTimerLog() {
-		console.log('Creating new timer log...')
-		
 		const actFile = this.app.workspace.getActiveFile();
 		const curString = await this.app.vault.read(actFile);
 		const timerBlockStart = curString.toLowerCase().search("```timer")
