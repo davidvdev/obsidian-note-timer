@@ -1,5 +1,5 @@
-import { table } from 'console';
-import { App, Component, Editor, htmlToMarkdown, MarkdownRenderChild, MarkdownRenderer, MarkdownView, Modal, moment, Notice, Plugin, PluginSettingTab, Setting, ToggleComponent } from 'obsidian';
+
+import { App, moment, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 interface NoteTimerSettings {
 	autoLog: boolean;
@@ -19,22 +19,22 @@ export default class NoteTimer extends Plugin {
 	settings: NoteTimerSettings;
 	timerInterval : null | number = null
 
-	runTimer(h:number, m:number, s:number, ms:number) {
-		ms++
-		if (ms === 100){
-			ms = 0
-			s++
-		}
-		if (s === 60){
-			s = 0
-			m++
-		}
-		if (m === 60){
-			m = 0
-			h++
-		}
-		return {h,m,s,ms}
-	}
+	// runTimer(h:number, m:number, s:number, ms:number) {
+	// 	ms++
+	// 	if (ms === 100){
+	// 		ms = 0
+	// 		s++
+	// 	}
+	// 	if (s === 60){
+	// 		s = 0
+	// 		m++
+	// 	}
+	// 	if (m === 60){
+	// 		m = 0
+	// 		h++
+	// 	}
+	// 	return {h,m,s,ms}
+	// }
 
 	nextOpenLine(positions:number[], target:number) {
 		// target: identifies the table location
@@ -92,6 +92,24 @@ export default class NoteTimer extends Plugin {
 			const isMsDisplay = () => this.settings.msDisplay === true ? true : src.toLowerCase().contains("ms: true" || "ms:true")
 
 			const time = {h:0,m:0,s:0, ms:0}
+
+			const runTimer = (h:number, m:number, s:number, ms:number) => {
+				ms++
+				if (ms === 100){
+					ms = 0
+					s++
+				}
+				if (s === 60){
+					s = 0
+					m++
+				}
+				if (m === 60){
+					m = 0
+					h++
+				}
+				return {h,m,s,ms}
+			}
+
 			const stringTime = () => {
 				if(isMsDisplay()){
 					return(
@@ -119,7 +137,7 @@ export default class NoteTimer extends Plugin {
 					window.clearInterval(this.timerInterval)
 					this.timerInterval = null
 					this.timerInterval = window.setInterval(() => {
-						const runningTime = this.runTimer(time.h, time.m, time.s, time.ms)
+						const runningTime = runTimer(time.h, time.m, time.s, time.ms)
 						time.h = runningTime.h
 						time.m = runningTime.m
 						time.s = runningTime.s
@@ -199,12 +217,12 @@ class NoteTimerSettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for Note Timer'});
+		containerEl.createEl('h2', {text: 'Obsidian Note Timer Settings'});
 		containerEl.createEl('p', { text: 'create a timer in any note by adding `timer` to any codeblock.'})
 
 		new Setting(containerEl)
 			.setName('Display Milleseconds')
-			.setDesc('If faster timers induce anxiety, you can turn off the millesecond display')
+			.setDesc('Turn off to display HH:MM:SS')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.msDisplay)
 				.onChange(async (value) => {
@@ -213,7 +231,7 @@ class NoteTimerSettingsTab extends PluginSettingTab {
 				}))
 		new Setting(containerEl)
 			.setName('Log by default')
-			.setDesc('Automatically creates a markdown table below the timer to maintain a log of timer durations.')
+			.setDesc('Enables the log button and automatically creates a markdown table below the timer to store the date, timer duration, and an empty cell for comments.')
 			.addToggle( toggle => toggle 
 				.setValue(this.plugin.settings.autoLog)
 				.onChange(async (value) => {
@@ -241,7 +259,12 @@ class NoteTimerSettingsTab extends PluginSettingTab {
 				.onChange( async (value) => {
 					this.plugin.settings.logDateLinking = value
 					await this.plugin.saveSettings()
-				})
-				)
-	}
+				}))
+
+		new Setting(containerEl)
+			.setName('Donate')
+			.setDesc('If you like this Plugin, please consider donating:')
+			.addButton( button => button
+				.buttonEl.outerHTML = `<a href='https://ko-fi.com/S6S55K9XD' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi3.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>`
+			)}
 }
