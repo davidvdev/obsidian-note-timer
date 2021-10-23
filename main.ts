@@ -19,22 +19,22 @@ export default class NoteTimer extends Plugin {
 	settings: NoteTimerSettings;
 	timerInterval : null | number = null
 
-	runTimer(h:number, m:number, s:number, ms:number) {
-		ms++
-		if (ms === 100){
-			ms = 0
-			s++
-		}
-		if (s === 60){
-			s = 0
-			m++
-		}
-		if (m === 60){
-			m = 0
-			h++
-		}
-		return {h,m,s,ms}
-	}
+	// runTimer(h:number, m:number, s:number, ms:number) {
+	// 	ms++
+	// 	if (ms === 100){
+	// 		ms = 0
+	// 		s++
+	// 	}
+	// 	if (s === 60){
+	// 		s = 0
+	// 		m++
+	// 	}
+	// 	if (m === 60){
+	// 		m = 0
+	// 		h++
+	// 	}
+	// 	return {h,m,s,ms}
+	// }
 
 	nextOpenLine(positions:number[], target:number) {
 		// target: identifies the table location
@@ -92,6 +92,24 @@ export default class NoteTimer extends Plugin {
 			const isMsDisplay = () => this.settings.msDisplay === true ? true : src.toLowerCase().contains("ms: true" || "ms:true")
 
 			const time = {h:0,m:0,s:0, ms:0}
+
+			const runTimer = (h:number, m:number, s:number, ms:number) => {
+				ms++
+				if (ms === 100){
+					ms = 0
+					s++
+				}
+				if (s === 60){
+					s = 0
+					m++
+				}
+				if (m === 60){
+					m = 0
+					h++
+				}
+				return {h,m,s,ms}
+			}
+
 			const stringTime = () => {
 				if(isMsDisplay()){
 					return(
@@ -119,7 +137,7 @@ export default class NoteTimer extends Plugin {
 					window.clearInterval(this.timerInterval)
 					this.timerInterval = null
 					this.timerInterval = window.setInterval(() => {
-						const runningTime = this.runTimer(time.h, time.m, time.s, time.ms)
+						const runningTime = runTimer(time.h, time.m, time.s, time.ms)
 						time.h = runningTime.h
 						time.m = runningTime.m
 						time.s = runningTime.s
