@@ -42,6 +42,19 @@ This is my first plugin for Obsidian, and it has definitely been built with huge
 
 Feel free to let me know of any issues or concerns with this plugin or if you have a solution to any of the below:
 ### Known Issues/Accidental Features
-1. Only one timer can run at a time:
+1. Only one timer can run at a time in the same note:
+    ![gif](obsidian-timer-oneN-manyT.gif) 
+2. Only one timer can run at a time in different notes:
+    ![gif](obsidian-timer-manyN-manyT.gif)
+
+3. Multiple timers in one note all log to the same table
+    ![gif](obsidian-timer-log-quirk.gif)
+
+> NOTE: bug 3 might be turned into a feature by allowing the user to declare `log-ID: Special` and then the function will search for the header `###### Special Timer Log`, but as of right now the current behavior is unexpected.
 
 ## Support
+Hey! Thanks for checking out my Obsidian plugin!
+
+If you like my work and want to support me going forward, please consider donating. 
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S6S55K9XD)
