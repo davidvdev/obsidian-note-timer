@@ -1,57 +1,47 @@
-## Obsidian Sample Plugin
+# Obsidian Note Timer
+This plugin for [Obsidian](https://obsidian.md/) uses codeblocks to insert an interactive timer to your notes. 
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+## Features
+Time individual notes and automatically keep an editable log of your times!
+![gif](obsidian-timer.gif)
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+## Usage
+Add a code block timer to any note with the following:
+````markdown
+```timer
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+```
+````
+You can adjust the features of all timers in the settings tab, but you can also fine tune individual timers :
+````markdown
+```timer
+log: true
+ms: true
+```
+````
+> NOTE: Timer specific settings always take precedence over globally set settings.
 
-### First time developing plugins?
+Here are the available settings and their values
+| Setting | Values | Description |
+| ------- | ------ | ----------- |
+| `log`   | `true` or `false` | If `true`, adds the log button to the timer controls. Clicking this adds a new entry to your note's timer log markdown table.<br>If `false`, removes the log button, and disallows logging for this timer.
+| `ms` | `true` or `false` | If `true`, timer displays as HH:MM:SS:sss.<br>If `false`, timer displays without the fast updating millesconds.<br>*note:* this option only changes the display, not the speed at which the timer runs.
 
-Quick starting guide for new plugin devs:
+> NOTE: As development continues, more features that are available in global settings will be added to timer specific settings
 
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
 
-### Releasing new releases
+## Installation
+- Download the Latest Release from the Releases section.
+- Extract the plugin folder from the zip to your vault's plugins folder: `<vault>/.obsidian/plugins/`
+- Reload Obsidian
+- If prompted about Safe Mode, you can disable safe mode and enable the plugin. Otherwise head to Settings, third-party plugins, make sure safe mode is off and enable the plugin from there.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments.
-- Publish the release.
+## For Developers
+This is my first plugin for Obsidian, and it has definitely been built with huge support from the community. Pull requeste are welcomed and appreciated!
 
-### Adding your plugin to the community plugin list
+Feel free to let me know of any issues or concerns with this plugin or if you have a solution to any of the below:
+### Known Issues/Accidental Features
+1. Only one timer can run at a time:
 
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-### How to use
-
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
-
-### Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-### API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+## Support

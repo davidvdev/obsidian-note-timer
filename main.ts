@@ -218,7 +218,7 @@ class NoteTimerSettingsTab extends PluginSettingTab {
 		containerEl.empty();
 
 		containerEl.createEl('h2', {text: 'Obsidian Note Timer Settings'});
-		containerEl.createEl('p', { text: 'create a timer in any note by adding `timer` to any codeblock.'})
+		containerEl.createEl('p', { text: `Find the documentation `}).createEl('a', { text:`here`, href: `https://github.com/davidvdev/obsidian-note-timer#readme`})
 
 		new Setting(containerEl)
 			.setName('Display Milleseconds')
