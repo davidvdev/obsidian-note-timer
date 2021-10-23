@@ -1,5 +1,5 @@
-import { table } from 'console';
-import { App, Component, Editor, htmlToMarkdown, MarkdownRenderChild, MarkdownRenderer, MarkdownView, Modal, moment, Notice, Plugin, PluginSettingTab, Setting, ToggleComponent } from 'obsidian';
+
+import { App, moment, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 interface NoteTimerSettings {
 	autoLog: boolean;
