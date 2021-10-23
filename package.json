@@ -1,7 +1,7 @@
 {
   "name": "obsidian-note-timer",
-  "version": "0.0.1",
-  "description": "Add a timer to your notes! Great for practicing speeches, interview answers, or any time sensitive activity.",
+  "version": "0.1.0",
+  "description": "Use codeblocks to add a timer and optional log to your notes.",
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",

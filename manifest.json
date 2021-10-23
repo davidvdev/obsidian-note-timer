@@ -1,9 +1,9 @@
 {
 	"id": "obsidian-note-timer",
 	"name": "Note Timer",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"minAppVersion": "0.9.12",
-	"description": "Add a timer to your notes! Great for practicing speeches, interview answers, or any time sensitive activity.",
+	"description": "Use codeblocks to add a timer and optional log to your notes.",
 	"author": "davidvdev",
 	"authorUrl": "https://www.davidvdev.com",
 	"isDesktopOnly": false
