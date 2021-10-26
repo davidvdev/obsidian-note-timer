@@ -19,29 +19,17 @@ export default class NoteTimer extends Plugin {
 	settings: NoteTimerSettings;
 	timerInterval : null | number = null
 
-	// runTimer(h:number, m:number, s:number, ms:number) {
-	// 	ms++
-	// 	if (ms === 100){
-	// 		ms = 0
-	// 		s++
-	// 	}
-	// 	if (s === 60){
-	// 		s = 0
-	// 		m++
-	// 	}
-	// 	if (m === 60){
-	// 		m = 0
-	// 		h++
-	// 	}
-	// 	return {h,m,s,ms}
-	// }
-
 	nextOpenLine(positions:number[], target:number) {
 		// target: identifies the table location
 		// +2: next 2 line breaks are md table column titles, and format lines
 		return positions[positions.findIndex(n => n > target)+2]
 	}
 
+	isTrue(src:string, key:string, setting:boolean ) {
+		if(src.toLowerCase().contains(`${key}: true` || `${key}:true`)) return true
+		if(src.toLowerCase().contains(`${key}: false` || `${key}:false`)) return false
+		return setting
+	}
 
 	async addToTimerLog(duration:string, logPosition:number) {
 		const actFile = this.app.workspace.getActiveFile();
@@ -87,10 +75,6 @@ export default class NoteTimer extends Plugin {
 
 		this.registerMarkdownCodeBlockProcessor("timer", (src,el,ctx) => {
 
-			// localized settings
-			const isLog = () => this.settings.autoLog === true ? true : src.toLowerCase().contains("log: true" || "log:true")
-			const isMsDisplay = () => this.settings.msDisplay === true ? true : src.toLowerCase().contains("ms: true" || "ms:true")
-
 			const time = {h:0,m:0,s:0, ms:0}
 
 			const runTimer = (h:number, m:number, s:number, ms:number) => {
@@ -111,7 +95,7 @@ export default class NoteTimer extends Plugin {
 			}
 
 			const stringTime = () => {
-				if(isMsDisplay()){
+				if(this.isTrue(src, 'ms', this.settings.msDisplay)){
 					return(
 						`${time.h < 10 ? `0${time.h}` : `${time.h}`}`
 						+`:${time.m < 10 ? `0${time.m}` : `${time.m}`}`
@@ -167,7 +151,7 @@ export default class NoteTimer extends Plugin {
 				timeDisplay.setText(stringTime())
 			}
 
-			if (isLog()){
+			if (this.isTrue(src, 'log', this.settings.autoLog)){
 				const log = buttonDiv.createEl("button" ,{ text: "log", cls: "timer-log"})
 				log.onclick = () => {
 					const area = ctx.getSectionInfo(el).text.toLowerCase()
@@ -186,9 +170,6 @@ export default class NoteTimer extends Plugin {
 
 		this.addSettingTab(new NoteTimerSettingsTab(this.app, this));
 
-		this.registerCodeMirror((cm: CodeMirror.Editor) => {
-			// console.log('codemirror', cm);
-		});
 	}
 
 	onunload() {
