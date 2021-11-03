@@ -1,5 +1,5 @@
 
-import { App, moment, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, MarkdownPostProcessor, MarkdownPostProcessorContext, moment, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 interface NoteTimerSettings {
 	autoLog: boolean;
@@ -31,8 +31,8 @@ export default class NoteTimer extends Plugin {
 		return setting
 	}
 
-	async addToTimerLog(duration:string, logPosition:number) {
-		const actFile = this.app.workspace.getActiveFile();
+	async addToTimerLog(duration:string, logPosition:number, ctx:MarkdownPostProcessorContext) {
+		const actFile = this.app.vault.getFiles().find(file => file.path === ctx.sourcePath)
 		const curString = await this.app.vault.read(actFile);
 		const newLinePositions = []
 		let customDate = String(moment().format(this.settings.dateFormat))
@@ -59,8 +59,8 @@ export default class NoteTimer extends Plugin {
 		this.app.vault.modify(actFile, curStringPart1 +  logEntry + curStringPart2)
 	}
 
-	async createNewTimerLog() {
-		const actFile = this.app.workspace.getActiveFile();
+	async createNewTimerLog(ctx:MarkdownPostProcessorContext) {
+		const actFile = this.app.vault.getFiles().find(file => file.path === ctx.sourcePath)
 		const curString = await this.app.vault.read(actFile);
 		const timerBlockStart = curString.toLowerCase().search("```timer")
 		const timerBlockEnd = curString.slice(timerBlockStart, curString.length).indexOf("```", 3) + 3
@@ -157,9 +157,9 @@ export default class NoteTimer extends Plugin {
 					const area = ctx.getSectionInfo(el).text.toLowerCase()
 					let logPosition = area.search("# timer log")
 					if(logPosition > 0){
-						this.addToTimerLog(timeDisplay.textContent, logPosition)
+						this.addToTimerLog(timeDisplay.textContent, logPosition, ctx)
 					} else {
-						this.createNewTimerLog()
+						this.createNewTimerLog(ctx)
 					}
 				}
 			}
