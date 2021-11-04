@@ -5,14 +5,16 @@ interface NoteTimerSettings {
 	autoLog: boolean;
 	dateFormat: string;
 	logDateLinking: string;
-	msDisplay: boolean
+	msDisplay: boolean;
+	buttonLabels: string;
 }
 
 const DEFAULT_SETTINGS: NoteTimerSettings = {
 	autoLog: false,
 	dateFormat: 'YYYY-MM-DD',
 	logDateLinking: 'none',
-	msDisplay: true
+	msDisplay: true,
+	buttonLabels: 'icons'
 }
 
 export default class NoteTimer extends Plugin {
@@ -25,10 +27,10 @@ export default class NoteTimer extends Plugin {
 		return positions[positions.findIndex(n => n > target)+2]
 	}
 
-	isTrue(src:string, key:string, setting:boolean ) {
-		if(src.toLowerCase().contains(`${key}: true` || `${key}:true`)) return true
-		if(src.toLowerCase().contains(`${key}: false` || `${key}:false`)) return false
-		return setting
+	isTrue(src:string, settingName:string, settingValue:boolean ) {
+		if(src.toLowerCase().contains(`${settingName}: true` || `${settingName}:true`)) return true
+		if(src.toLowerCase().contains(`${settingName}: false` || `${settingName}:false`)) return false
+		return settingValue
 	}
 
 	async addToTimerLog(duration:string, logPosition:number, ctx:MarkdownPostProcessorContext) {
@@ -239,6 +241,18 @@ class NoteTimerSettingsTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.logDateLinking)
 				.onChange( async (value) => {
 					this.plugin.settings.logDateLinking = value
+					await this.plugin.saveSettings()
+				}))
+
+		new Setting(containerEl)
+			.setName('Button Labels')
+			.setDesc('Choose whether timer buttons are labeled with symbols or text')
+			.addDropdown( dropdown => dropdown
+				.addOption('text','text')
+				.addOption('icons','icons')
+				.setValue(this.plugin.settings.buttonLabels)
+				.onChange( async (value) => {
+					this.plugin.settings.buttonLabels = value
 					await this.plugin.saveSettings()
 				}))
 
