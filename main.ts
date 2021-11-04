@@ -1,5 +1,6 @@
 
 import { App, MarkdownPostProcessor, MarkdownPostProcessorContext, moment, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import * as feather from "feather-icons";
 
 interface NoteTimerSettings {
 	autoLog: boolean;
@@ -31,6 +32,42 @@ export default class NoteTimer extends Plugin {
 		if(src.toLowerCase().contains(`${settingName}: true` || `${settingName}:true`)) return true
 		if(src.toLowerCase().contains(`${settingName}: false` || `${settingName}:false`)) return false
 		return settingValue
+	}
+
+	buttonLabelSwitch(button: string, setting:string){
+		switch(setting){
+			case 'icons':
+				switch(button){
+					case 'start':
+						return feather.icons.start.toSvg()
+					case 'pause':
+						return '⏸'
+					case 'reset':
+						return '🔄'
+					case 'log':
+						return '💾'
+				}
+				break;
+			case 'text':
+				switch(button){
+					case 'start':
+						return 'start'
+					case 'pause':
+						return 'pause'
+					case 'reset':
+						return 'reset'
+					case 'log':
+						return 'log'
+				}
+				break;
+		}
+		
+	}
+
+	buttonLabel(src:string, settingName:string, settingValue:string, button:string) {
+		if(src.toLowerCase().contains(`${settingName}: icons` || `${settingName}:icons`)) return this.buttonLabelSwitch(button, 'icons')
+		if(src.toLowerCase().contains(`${settingName}: text` || `${settingName}:text`)) return this.buttonLabelSwitch(button, 'text')
+		else return this.buttonLabelSwitch(button, settingValue)
 	}
 
 	async addToTimerLog(duration:string, logPosition:number, ctx:MarkdownPostProcessorContext) {
@@ -138,9 +175,9 @@ export default class NoteTimer extends Plugin {
 			}
 
 			const buttonDiv = el.createDiv({ cls: "timer-button-group"})
-			const start = buttonDiv.createEl("button", { text: "start", cls: "timer-start" })
-			const pause = buttonDiv.createEl("button" ,{ text: "pause", cls: "timer-pause"})
-			const reset = buttonDiv.createEl("button" ,{ text: "reset", cls: "timer-reset"})
+			const start = buttonDiv.createEl("button", { text: `${this.buttonLabel(src, 'buttonLabels', this.settings.buttonLabels, 'start')}`, cls: "timer-start" })
+			const pause = buttonDiv.createEl("button", { text: `${this.buttonLabel(src, 'buttonLabels', this.settings.buttonLabels, 'pause')}`, cls: "timer-pause"})
+			const reset = buttonDiv.createEl("button", { text: `${this.buttonLabel(src, 'buttonLabels', this.settings.buttonLabels, 'reset')}`, cls: "timer-reset"})
 
 
 			start.onclick = () => timerControl(true)
@@ -154,7 +191,7 @@ export default class NoteTimer extends Plugin {
 			}
 
 			if (this.isTrue(src, 'log', this.settings.autoLog)){
-				const log = buttonDiv.createEl("button" ,{ text: "log", cls: "timer-log"})
+				const log = buttonDiv.createEl("button" ,{ text: `${this.buttonLabel(src, 'buttonLabels', this.settings.buttonLabels, 'log')}`, cls: "timer-log"})
 				log.onclick = () => {
 					const area = ctx.getSectionInfo(el).text.toLowerCase()
 					let logPosition = area.search("# timer log")
