@@ -33,6 +33,7 @@ export default class NoteTimer extends Plugin {
 
 	async addToTimerLog(duration:string, logPosition:number, ctx:MarkdownPostProcessorContext) {
 		const actFile = this.app.vault.getFiles().find(file => file.path === ctx.sourcePath)
+		// const actFile = this.app.vault.getAbstractFileByPath(ctx.sourcePath)
 		const curString = await this.app.vault.read(actFile);
 		const newLinePositions = []
 		let customDate = String(moment().format(this.settings.dateFormat))
