@@ -35,10 +35,6 @@ export default class NoteTimer extends Plugin {
 
 		const filePath = ctx.sourcePath
 		const actFile = this.app.vault.getAbstractFileByPath(filePath)
-
-		// DO NOT DO THIS
-		// const actFile = this.app.vault.getFiles().find(file => file.path === ctx.sourcePath)
-		// const actFile = this.app.vault.getAbstractFileByPath(ctx.sourcePath)
 		
 		if (actFile instanceof TFile){
 			const curString = await this.app.vault.read(actFile);
@@ -69,15 +65,20 @@ export default class NoteTimer extends Plugin {
 	}
 
 	async createNewTimerLog(ctx:MarkdownPostProcessorContext) {
-		const actFile = this.app.vault.getFiles().find(file => file.path === ctx.sourcePath)
-		const curString = await this.app.vault.read(actFile);
-		const timerBlockStart = curString.toLowerCase().search("```timer")
-		const timerBlockEnd = curString.slice(timerBlockStart, curString.length).indexOf("```", 3) + 3
-		const curStringPart1 = curString.slice(0, timerBlockStart + timerBlockEnd)
-		const curStringPart2 = curString.slice(timerBlockStart + timerBlockEnd, curString.length)
-		const tableStr = `\n###### Timer Log\n| date | duration | comments|\n| ---- | -------- | ------- |\n`
 
-		this.app.vault.modify(actFile, curStringPart1 +  tableStr + curStringPart2)
+		const filePath = ctx.sourcePath
+		const actFile = this.app.vault.getAbstractFileByPath(filePath)
+
+		if (actFile instanceof TFile){
+			const curString = await this.app.vault.read(actFile);
+			const timerBlockStart = curString.toLowerCase().search("```timer")
+			const timerBlockEnd = curString.slice(timerBlockStart, curString.length).indexOf("```", 3) + 3
+			const curStringPart1 = curString.slice(0, timerBlockStart + timerBlockEnd)
+			const curStringPart2 = curString.slice(timerBlockStart + timerBlockEnd, curString.length)
+			const tableStr = `\n###### Timer Log\n| date | duration | comments|\n| ---- | -------- | ------- |\n`
+
+			this.app.vault.modify(actFile, curStringPart1 +  tableStr + curStringPart2)
+		}
 	}
 
 	async onload() {
