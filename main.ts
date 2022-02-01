@@ -1,5 +1,5 @@
 
-import { App, MarkdownPostProcessor, MarkdownPostProcessorContext, moment, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, MarkdownPostProcessor, MarkdownPostProcessorContext, moment, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 
 interface NoteTimerSettings {
 	autoLog: boolean;
@@ -32,32 +32,40 @@ export default class NoteTimer extends Plugin {
 	}
 
 	async addToTimerLog(duration:string, logPosition:number, ctx:MarkdownPostProcessorContext) {
-		const actFile = this.app.vault.getFiles().find(file => file.path === ctx.sourcePath)
+
+		const filePath = ctx.sourcePath
+		const actFile = this.app.vault.getAbstractFileByPath(filePath)
+
+		// DO NOT DO THIS
+		// const actFile = this.app.vault.getFiles().find(file => file.path === ctx.sourcePath)
 		// const actFile = this.app.vault.getAbstractFileByPath(ctx.sourcePath)
-		const curString = await this.app.vault.read(actFile);
-		const newLinePositions = []
-		let customDate = String(moment().format(this.settings.dateFormat))
+		
+		if (actFile instanceof TFile){
+			const curString = await this.app.vault.read(actFile);
+			const newLinePositions = []
+			let customDate = String(moment().format(this.settings.dateFormat))
 
-		switch (this.settings.logDateLinking) {
-			case 'tag':
-				customDate = `#${customDate}`
-				break;
-			case 'link':
-				customDate = `[[${customDate}]]`
-			default:
-				break;
+			switch (this.settings.logDateLinking) {
+				case 'tag':
+					customDate = `#${customDate}`
+					break;
+				case 'link':
+					customDate = `[[${customDate}]]`
+				default:
+					break;
+			}
+
+			for(let c = 0; c < curString.length; c++){
+				// creates an array of all new line positions
+				if(curString[c].search("\n") >= 0) newLinePositions.push(c)
+			}
+
+			const curStringPart1 = curString.slice(0, this.nextOpenLine(newLinePositions, logPosition) )
+			const curStringPart2 = curString.slice(this.nextOpenLine(newLinePositions, logPosition) , curString.length)
+			const logEntry = `\n| ${customDate} | ${duration} |  |`
+
+			this.app.vault.modify(actFile, curStringPart1 +  logEntry + curStringPart2)
 		}
-
-		for(let c = 0; c < curString.length; c++){
-			// creates an array of all new line positions
-			if(curString[c].search("\n") >= 0) newLinePositions.push(c)
-		}
-
-		const curStringPart1 = curString.slice(0, this.nextOpenLine(newLinePositions, logPosition) )
-		const curStringPart2 = curString.slice(this.nextOpenLine(newLinePositions, logPosition) , curString.length)
-		const logEntry = `\n| ${customDate} | ${duration} |  |`
-
-		this.app.vault.modify(actFile, curStringPart1 +  logEntry + curStringPart2)
 	}
 
 	async createNewTimerLog(ctx:MarkdownPostProcessorContext) {
