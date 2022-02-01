@@ -1,21 +1,18 @@
 
-import { App, MarkdownPostProcessor, MarkdownPostProcessorContext, moment, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import * as feather from "feather-icons";
+import { App, MarkdownPostProcessor, MarkdownPostProcessorContext, moment, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 
 interface NoteTimerSettings {
 	autoLog: boolean;
 	dateFormat: string;
 	logDateLinking: string;
-	msDisplay: boolean;
-	buttonLabels: string;
+	msDisplay: boolean
 }
 
 const DEFAULT_SETTINGS: NoteTimerSettings = {
 	autoLog: false,
 	dateFormat: 'YYYY-MM-DD',
 	logDateLinking: 'none',
-	msDisplay: true,
-	buttonLabels: 'icons'
+	msDisplay: true
 }
 
 export default class NoteTimer extends Plugin {
@@ -28,86 +25,60 @@ export default class NoteTimer extends Plugin {
 		return positions[positions.findIndex(n => n > target)+2]
 	}
 
-	isTrue(src:string, settingName:string, settingValue:boolean ) {
-		if(src.toLowerCase().contains(`${settingName}: true` || `${settingName}:true`)) return true
-		if(src.toLowerCase().contains(`${settingName}: false` || `${settingName}:false`)) return false
-		return settingValue
-	}
-
-	buttonLabelSwitch(button: string, setting:string){
-		switch(setting){
-			case 'icons':
-				switch(button){
-					case 'start':
-						return feather.icons.start.toSvg()
-					case 'pause':
-						return '⏸'
-					case 'reset':
-						return '🔄'
-					case 'log':
-						return '💾'
-				}
-				break;
-			case 'text':
-				switch(button){
-					case 'start':
-						return 'start'
-					case 'pause':
-						return 'pause'
-					case 'reset':
-						return 'reset'
-					case 'log':
-						return 'log'
-				}
-				break;
-		}
-		
-	}
-
-	buttonLabel(src:string, settingName:string, settingValue:string, button:string) {
-		if(src.toLowerCase().contains(`${settingName}: icons` || `${settingName}:icons`)) return this.buttonLabelSwitch(button, 'icons')
-		if(src.toLowerCase().contains(`${settingName}: text` || `${settingName}:text`)) return this.buttonLabelSwitch(button, 'text')
-		else return this.buttonLabelSwitch(button, settingValue)
+	isTrue(src:string, key:string, setting:boolean ) {
+		if(src.toLowerCase().contains(`${key}: true` || `${key}:true`)) return true
+		if(src.toLowerCase().contains(`${key}: false` || `${key}:false`)) return false
+		return setting
 	}
 
 	async addToTimerLog(duration:string, logPosition:number, ctx:MarkdownPostProcessorContext) {
-		const actFile = this.app.vault.getFiles().find(file => file.path === ctx.sourcePath)
-		const curString = await this.app.vault.read(actFile);
-		const newLinePositions = []
-		let customDate = String(moment().format(this.settings.dateFormat))
 
-		switch (this.settings.logDateLinking) {
-			case 'tag':
-				customDate = `#${customDate}`
-				break;
-			case 'link':
-				customDate = `[[${customDate}]]`
-			default:
-				break;
+		const filePath = ctx.sourcePath
+		const actFile = this.app.vault.getAbstractFileByPath(filePath)
+		
+		if (actFile instanceof TFile){
+			const curString = await this.app.vault.read(actFile);
+			const newLinePositions = []
+			let customDate = String(moment().format(this.settings.dateFormat))
+
+			switch (this.settings.logDateLinking) {
+				case 'tag':
+					customDate = `#${customDate}`
+					break;
+				case 'link':
+					customDate = `[[${customDate}]]`
+				default:
+					break;
+			}
+
+			for(let c = 0; c < curString.length; c++){
+				// creates an array of all new line positions
+				if(curString[c].search("\n") >= 0) newLinePositions.push(c)
+			}
+
+			const curStringPart1 = curString.slice(0, this.nextOpenLine(newLinePositions, logPosition) )
+			const curStringPart2 = curString.slice(this.nextOpenLine(newLinePositions, logPosition) , curString.length)
+			const logEntry = `\n| ${customDate} | ${duration} |  |`
+
+			this.app.vault.modify(actFile, curStringPart1 +  logEntry + curStringPart2)
 		}
-
-		for(let c = 0; c < curString.length; c++){
-			// creates an array of all new line positions
-			if(curString[c].search("\n") >= 0) newLinePositions.push(c)
-		}
-
-		const curStringPart1 = curString.slice(0, this.nextOpenLine(newLinePositions, logPosition) )
-		const curStringPart2 = curString.slice(this.nextOpenLine(newLinePositions, logPosition) , curString.length)
-		const logEntry = `\n| ${customDate} | ${duration} |  |`
-
-		this.app.vault.modify(actFile, curStringPart1 +  logEntry + curStringPart2)
 	}
 
 	async createNewTimerLog(ctx:MarkdownPostProcessorContext) {
-		const actFile = this.app.vault.getFiles().find(file => file.path === ctx.sourcePath)
-		const curString = await this.app.vault.read(actFile);
-		const timerBlockStart = curString.toLowerCase().search("```timer")
-		const timerBlockEnd = curString.slice(timerBlockStart, curString.length).indexOf("```", 3) + 3
-		const curStringPart1 = curString.slice(0, timerBlockStart + timerBlockEnd)
-		const curStringPart2 = curString.slice(timerBlockStart + timerBlockEnd, curString.length)
-		const tableStr = `\n###### Timer Log\n| date | duration | comments|\n| ---- | -------- | ------- |\n`
 
-		this.app.vault.modify(actFile, curStringPart1 +  tableStr + curStringPart2)
+		const filePath = ctx.sourcePath
+		const actFile = this.app.vault.getAbstractFileByPath(filePath)
+
+		if (actFile instanceof TFile){
+			const curString = await this.app.vault.read(actFile);
+			const timerBlockStart = curString.toLowerCase().search("```timer")
+			const timerBlockEnd = curString.slice(timerBlockStart, curString.length).indexOf("```", 3) + 3
+			const curStringPart1 = curString.slice(0, timerBlockStart + timerBlockEnd)
+			const curStringPart2 = curString.slice(timerBlockStart + timerBlockEnd, curString.length)
+			const tableStr = `\n###### Timer Log\n| date | duration | comments|\n| ---- | -------- | ------- |\n`
+
+			this.app.vault.modify(actFile, curStringPart1 +  tableStr + curStringPart2)
+		}
 	}
 
 	async onload() {
@@ -175,9 +146,9 @@ export default class NoteTimer extends Plugin {
 			}
 
 			const buttonDiv = el.createDiv({ cls: "timer-button-group"})
-			const start = buttonDiv.createEl("button", { text: `${this.buttonLabel(src, 'buttonLabels', this.settings.buttonLabels, 'start')}`, cls: "timer-start" })
-			const pause = buttonDiv.createEl("button", { text: `${this.buttonLabel(src, 'buttonLabels', this.settings.buttonLabels, 'pause')}`, cls: "timer-pause"})
-			const reset = buttonDiv.createEl("button", { text: `${this.buttonLabel(src, 'buttonLabels', this.settings.buttonLabels, 'reset')}`, cls: "timer-reset"})
+			const start = buttonDiv.createEl("button", { text: "start", cls: "timer-start" })
+			const pause = buttonDiv.createEl("button" ,{ text: "pause", cls: "timer-pause"})
+			const reset = buttonDiv.createEl("button" ,{ text: "reset", cls: "timer-reset"})
 
 
 			start.onclick = () => timerControl(true)
@@ -191,7 +162,7 @@ export default class NoteTimer extends Plugin {
 			}
 
 			if (this.isTrue(src, 'log', this.settings.autoLog)){
-				const log = buttonDiv.createEl("button" ,{ text: `${this.buttonLabel(src, 'buttonLabels', this.settings.buttonLabels, 'log')}`, cls: "timer-log"})
+				const log = buttonDiv.createEl("button" ,{ text: "log", cls: "timer-log"})
 				log.onclick = () => {
 					const area = ctx.getSectionInfo(el).text.toLowerCase()
 					let logPosition = area.search("# timer log")
@@ -278,18 +249,6 @@ class NoteTimerSettingsTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.logDateLinking)
 				.onChange( async (value) => {
 					this.plugin.settings.logDateLinking = value
-					await this.plugin.saveSettings()
-				}))
-
-		new Setting(containerEl)
-			.setName('Button Labels')
-			.setDesc('Choose whether timer buttons are labeled with symbols or text')
-			.addDropdown( dropdown => dropdown
-				.addOption('text','text')
-				.addOption('icons','icons')
-				.setValue(this.plugin.settings.buttonLabels)
-				.onChange( async (value) => {
-					this.plugin.settings.buttonLabels = value
 					await this.plugin.saveSettings()
 				}))
 
