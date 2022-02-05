@@ -31,7 +31,7 @@ export default class NoteTimer extends Plugin {
 		return setting
 	}
 
-	async addToTimerLog(duration:string, logPosition:number, ctx:MarkdownPostProcessorContext) {
+	async addToTimerLog(duration:string, logPosition:number, ctx:MarkdownPostProcessorContext, justValue?:boolean) {
 
 		const filePath = ctx.sourcePath
 		const actFile = this.app.vault.getAbstractFileByPath(filePath)
@@ -60,11 +60,11 @@ export default class NoteTimer extends Plugin {
 			const curStringPart2 = curString.slice(this.nextOpenLine(newLinePositions, logPosition) , curString.length)
 			const logEntry = `\n| ${customDate} | ${duration} |  |`
 
-			this.app.vault.modify(actFile, curStringPart1 +  logEntry + curStringPart2)
+			justValue ? logEntry : this.app.vault.modify(actFile, curStringPart1 +  logEntry + curStringPart2);
 		}
 	}
 
-	async createNewTimerLog(ctx:MarkdownPostProcessorContext) {
+	async createNewTimerLog(ctx:MarkdownPostProcessorContext, logPosition?:number, duration?:string) {
 
 		const filePath = ctx.sourcePath
 		const actFile = this.app.vault.getAbstractFileByPath(filePath)
@@ -76,8 +76,17 @@ export default class NoteTimer extends Plugin {
 			const curStringPart1 = curString.slice(0, timerBlockStart + timerBlockEnd)
 			const curStringPart2 = curString.slice(timerBlockStart + timerBlockEnd, curString.length)
 			const tableStr = `\n###### Timer Log\n| date | duration | comments|\n| ---- | -------- | ------- |\n`
+			let finalStr
 
-			this.app.vault.modify(actFile, curStringPart1 +  tableStr + curStringPart2)
+			if (logPosition && duration){
+				const entry = await this.addToTimerLog(duration, logPosition, ctx, true)
+				console.log(entry)
+				finalStr = curStringPart1 +  tableStr + entry + curStringPart2
+			} else {
+				finalStr = curStringPart1 +  tableStr + curStringPart2
+			}
+
+			this.app.vault.modify(actFile, finalStr)
 		}
 	}
 
@@ -163,13 +172,14 @@ export default class NoteTimer extends Plugin {
 
 			if (this.isTrue(src, 'log', this.settings.autoLog)){
 				const log = buttonDiv.createEl("button" ,{ text: "log", cls: "timer-log"})
-				log.onclick = () => {
+				log.onclick = async () => {
 					const area = () => ctx.getSectionInfo(el).text.toLowerCase()
 					const logPosition = () => area().search("# timer log")
 					if(logPosition() > 0){
 						this.addToTimerLog(timeDisplay.textContent, logPosition(), ctx)
 					} else {
-						this.createNewTimerLog(ctx)
+						this.createNewTimerLog(ctx, logPosition(), timeDisplay.textContent)
+						// await this.addToTimerLog(timeDisplay.textContent, logPosition(), ctx)
 					}
 				}
 			}
