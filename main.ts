@@ -164,10 +164,10 @@ export default class NoteTimer extends Plugin {
 			if (this.isTrue(src, 'log', this.settings.autoLog)){
 				const log = buttonDiv.createEl("button" ,{ text: "log", cls: "timer-log"})
 				log.onclick = () => {
-					const area = ctx.getSectionInfo(el).text.toLowerCase()
-					let logPosition = area.search("# timer log")
-					if(logPosition > 0){
-						this.addToTimerLog(timeDisplay.textContent, logPosition, ctx)
+					const area = () => ctx.getSectionInfo(el).text.toLowerCase()
+					const logPosition = () => area().search("# timer log")
+					if(logPosition() > 0){
+						this.addToTimerLog(timeDisplay.textContent, logPosition(), ctx)
 					} else {
 						this.createNewTimerLog(ctx)
 					}
