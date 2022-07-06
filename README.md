@@ -32,8 +32,11 @@ Here are the available settings and their values
 
 
 ## Installation
-- Download the Latest Release from the Releases section.
-- Extract the plugin folder from the zip to your vault's plugins folder: `<vault>/.obsidian/plugins/`
+- Open up the plugins folder in you local file explorer.
+    - You can find this in settings, under Community Plugins, on the Installed Plugins header.
+- Create a folder called `obsidian-note-timer`
+- Click the Latest Release from the Releases section and download `main.js`, `styles.css`, and `manifest.json`.
+- Place these files inside of the `obsidian-note-timer` folder.
 - Reload Obsidian
 - If prompted about Safe Mode, you can disable safe mode and enable the plugin. Otherwise head to Settings, third-party plugins, make sure safe mode is off and enable the plugin from there.
 
