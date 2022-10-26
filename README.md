@@ -27,7 +27,11 @@ Here are the available settings and their values
 | ------- | ------ | ----------- |
 | `log`   | `true` or `false` | If `true`, adds the log button to the timer controls. Clicking this adds a new entry to your note's timer log markdown table.<br>If `false`, removes the log button, and disallows logging for this timer.
 | `ms` | `true` or `false` | If `true`, timer displays as HH:MM:SS:sss.<br>If `false`, timer displays without the fast updating millesconds.<br>*note:* this option only changes the display, not the speed at which the timer runs.
-
+| `ms` | `true` or `false` | If `true`, timer displays as HH:MM:SS:sss.<br>If `false`, timer displays without the fast updating millesconds.<br>*note:* this option only changes the display, not the speed at which the timer runs.
+| `startButtonText` | text | Change the text in the Start Button | 
+| `stopButtonText` | text | Change the text in the Stop Button | 
+| `resetButtonText` | text | Change the text in the Reset Button | 
+| `showResetButton` | `true` or `false` | If `true`, timer keeps running after a reset.<br>If `false`, the timer resets and stops without loging.<br> | 
 > NOTE: As development continues, more features that are available in global settings will be added to timer specific settings
 
 
