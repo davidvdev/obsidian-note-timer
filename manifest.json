@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-note-timer",
 	"name": "Note Timer",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"minAppVersion": "0.9.12",
 	"description": "Use codeblocks to add a timer and optional log to your notes.",
 	"author": "davidvdev",
